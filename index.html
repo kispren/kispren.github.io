@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tarot — Un Cadeau pour Toi</title>
+
+  <!-- ═══════════════════════════════════════════════════
+       FONTS
+  ═══════════════════════════════════════════════════ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       VARIABLES & RESET
+    ═══════════════════════════════════════════════════ */
+    :root {
+      --bg:          #0d0c0e;
+      --bg-card:     #131118;
+      --bg-gallery:  #100f14;
+      --copper:      #c8621a;
+      --copper-glow: #ff7a2f;
+      --copper-dim:  #7a3a0e;
+      --gold:        #d4a84b;
+      --text:        #e8e0d5;
+      --text-dim:    #8a8080;
+      --text-faint:  #3a3535;
+      --border:      rgba(200, 98, 26, 0.25);
+      --border-glow: rgba(200, 98, 26, 0.6);
+      --card-w:      280px;
+      --card-h:      497px; /* ratio 400×710 */
+      --radius:      12px;
+      --transition:  0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 17px;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: default;
+    }
+
+    /* ── Grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.45;
+    }
+
+    /* ── Stars background ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 12% 8%,  rgba(255,200,120,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 15%, rgba(255,200,120,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 5%,  rgba(255,200,120,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 22%, rgba(255,200,120,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 68% 30%, rgba(255,200,120,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 40%, rgba(255,200,120,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5%  50%, rgba(255,200,120,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 42% 60%, rgba(255,200,120,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 65%, rgba(255,200,120,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 75%, rgba(255,200,120,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 95% 80%, rgba(255,200,120,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 90%, rgba(255,200,120,0.3) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       DIVIDER ORNEMENT
+    ═══════════════════════════════════════════════════ */
+    .ornament {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--copper-dim);
+      font-size: 18px;
+      user-select: none;
+    }
+    .ornament::before,
+    .ornament::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--copper-dim), transparent);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════ */
+    header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 80px 24px 60px;
+    }
+
+    .header-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--copper);
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+
+    h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(28px, 6vw, 56px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      text-shadow: 0 0 60px rgba(200, 98, 26, 0.3), 0 2px 4px rgba(0,0,0,0.8);
+      margin-bottom: 28px;
+    }
+
+    h1 span {
+      color: var(--copper-glow);
+      text-shadow: 0 0 30px rgba(255, 122, 47, 0.7);
+    }
+
+    .header-message {
+      max-width: 580px;
+      margin: 0 auto 40px;
+      font-size: 17px;
+      font-style: italic;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+
+    /* ── Audio button ── */
+    #audio-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 28px;
+      background: transparent;
+      border: 1px solid var(--border-glow);
+      border-radius: 40px;
+      color: var(--copper-glow);
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #audio-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(200,98,26,0.15) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #audio-btn:hover { border-color: var(--copper-glow); box-shadow: 0 0 20px rgba(200,98,26,0.3); }
+    #audio-btn:hover::before { opacity: 1; }
+
+    #audio-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    #audio-btn.playing .icon-play { display: none; }
+    #audio-btn:not(.playing) .icon-pause { display: none; }
+
+    /* ═══════════════════════════════════════════════════
+       SECTION : NOUVELLE CARTE
+    ═══════════════════════════════════════════════════ */
+    #new-card-section {
+      position: relative;
+      z-index: 1;
+      padding: 20px 24px 80px;
+      text-align: center;
+    }
+
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--copper-dim);
+      margin-bottom: 40px;
+    }
+
+    /* ── Card container (3D tilt) ── */
+    .card-scene {
+      display: inline-block;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-flipper {
+      position: relative;
+      width: var(--card-w);
+      height: var(--card-h);
+      transform-style: preserve-3d;
+      transition: transform 1s cubic-bezier(0.6, 0.2, 0.2, 1);
+      /* tilt is applied via JS inline style */
+    }
+
+    .card-flipper.flipped {
+      transform: rotateY(180deg) !important; /* !important to override JS tilt during flip */
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow:
+        0 0 0 1px rgba(200,98,26,0.1),
+        0 20px 60px rgba(0,0,0,0.8),
+        0 0 40px rgba(200,98,26,0.08);
+    }
+
+    .card-back { transform: rotateY(0deg); }
+    .card-front { transform: rotateY(180deg); }
+
+    .card-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      image-rendering: pixelated; /* preserve pixel art crispness */
+    }
+
+    /* ── Glare overlay ── */
+    .card-glare {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
+      transition: background 0.15s ease;
+      z-index: 2;
+    }
+
+    /* ── Hint pulse on back ── */
+    .card-back::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      box-shadow: inset 0 0 0 1px rgba(200,98,26,0.4);
+      animation: pulse-border 3s ease-in-out infinite;
+    }
+
+    .card-flipper.flipped .card-back::after { animation: none; }
+
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: inset 0 0 0 1px rgba(200,98,26,0.2), 0 0 20px rgba(200,98,26,0.05); }
+      50%       { box-shadow: inset 0 0 0 1px rgba(200,98,26,0.7), 0 0 40px rgba(200,98,26,0.2); }
+    }
+
+    /* ── Hint text under new card ── */
+    .card-hint {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--copper-dim);
+      margin-top: 20px;
+      transition: opacity 0.5s;
+    }
+    .card-hint.hidden { opacity: 0; pointer-events: none; }
+
+    /* ── Revealed info block ── */
+    #new-card-info {
+      max-width: 480px;
+      margin: 40px auto 0;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease 0.6s, transform 0.8s ease 0.6s;
+      pointer-events: none;
+    }
+    #new-card-info.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    #new-card-info h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(18px, 4vw, 26px);
+      letter-spacing: 0.12em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .card-personal-msg {
+      font-style: italic;
+      color: var(--copper-glow);
+      margin-bottom: 24px;
+      font-size: 16px;
+    }
+
+    .meanings {
+      display: flex;
+      gap: 24px;
+      text-align: left;
+    }
+
+    .meaning-block {
+      flex: 1;
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .meaning-label {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--copper-dim);
+      margin-bottom: 8px;
+    }
+
+    .meaning-text {
+      font-size: 15px;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SECTION : GALERIE
+    ═══════════════════════════════════════════════════ */
+    #gallery-section {
+      position: relative;
+      z-index: 1;
+      padding: 60px 40px 100px;
+      background: var(--bg-gallery);
+      border-top: 1px solid var(--border);
+    }
+
+    #gallery-section .ornament {
+      margin-bottom: 50px;
+    }
+
+    .gallery-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(14px, 3vw, 20px);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    /* ── CSS Grid ── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 48px 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Gallery card item ── */
+    .gallery-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .gallery-card-img {
+      width: 100%;
+      max-width: 200px;
+      aspect-ratio: 400 / 710;
+      object-fit: cover;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      image-rendering: pixelated;
+      display: block;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+      transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+
+    .gallery-card-img:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 20px rgba(200,98,26,0.2);
+      border-color: var(--border-glow);
+    }
+
+    .gallery-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .gallery-card-msg {
+      font-style: italic;
+      font-size: 14px;
+      color: var(--copper);
+      text-align: center;
+    }
+
+    .gallery-meanings {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .gallery-meaning {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      padding: 10px 14px;
+      border-left: 2px solid var(--copper-dim);
+      background: rgba(255,255,255,0.02);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .gallery-meaning strong {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--copper-dim);
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+
+    /* ── Empty gallery state ── */
+    .gallery-empty {
+      text-align: center;
+      color: var(--text-faint);
+      font-style: italic;
+      font-size: 16px;
+      padding: 40px;
+      grid-column: 1 / -1;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════════ */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 24px;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       TOAST NOTIFICATION
+    ═══════════════════════════════════════════════════ */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(13,12,14,0.95);
+      border: 1px solid var(--border-glow);
+      border-radius: 40px;
+      padding: 10px 24px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--copper-glow);
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.4s;
+      pointer-events: none;
+      z-index: 10000;
+      box-shadow: 0 0 30px rgba(200,98,26,0.2);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ═══════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      :root {
+        --card-w: min(72vw, 280px);
+        --card-h: calc(var(--card-w) * 710 / 400);
+      }
+
+      .meanings { flex-direction: column; gap: 12px; }
+
+      .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 48px 0;
+      }
+
+      #gallery-section { padding: 50px 20px 80px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       TOAST
+  ══════════════════════════════════════ -->
+  <div id="toast"></div>
+
+  <!-- ══════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════ -->
+  <header>
+    <p class="header-eyebrow">✦ Un cadeau pour toi ✦</p>
+
+    <h1>Le Tarot<br/><span>des Âmes Rares</span></h1>
+
+    <p class="header-message">
+      Ce jeu n'appartient qu'à toi. Chaque carte a été dessinée avec soin,
+      portant un fragment de lumière choisi pour toi. Retourne la carte du jour
+      quand tu te sens prête — elle n'attend que toi.
+    </p>
+
+    <!-- Audio toggle -->
+    <button id="audio-btn" aria-label="Activer la musique">
+      <!-- Play icon -->
+      <svg class="icon-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polygon points="5,3 19,12 5,21" stroke="currentColor" fill="currentColor" opacity="0.8"/>
+      </svg>
+      <!-- Pause icon -->
+      <svg class="icon-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" opacity="0.8"/>
+        <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" opacity="0.8"/>
+      </svg>
+      <span id="audio-label">Activer la musique</span>
+    </button>
+
+    <!-- Hidden audio elements — replace src with your actual files -->
+    <audio id="bg-music" loop>
+      <!--
+        Remplace le src par l'URL de ta musique de fond.
+        Ex: src="audio/ambiance.mp3"
+        Recommandation : une piste ambiante mystique sans droits (Freesound.org, etc.)
+      -->
+      <source src="audio/ambiance.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="sfx-flip" preload="auto">
+      <!-- Remplace par ton effet sonore de retournement de carte -->
+      <source src="audio/flip.mp3" type="audio/mpeg" />
+    </audio>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       SECTION — NOUVELLE CARTE
+  ══════════════════════════════════════ -->
+  <section id="new-card-section">
+    <p class="section-label">✦ La carte du moment ✦</p>
+
+    <!-- Populated by JS -->
+    <div id="new-card-container"></div>
+
+    <p class="card-hint" id="card-hint">Clique pour révéler</p>
+
+    <!-- Info revealed after flip -->
+    <div id="new-card-info"></div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       SECTION — GALERIE
+  ══════════════════════════════════════ -->
+  <section id="gallery-section">
+    <div class="ornament">
+      <span class="gallery-title">Les cartes révélées</span>
+    </div>
+
+    <!-- Populated by JS -->
+    <div class="gallery-grid" id="gallery-grid"></div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════ -->
+  <footer>
+    ✦ Fait avec amour ✦ Tarot Personnel ✦
+  </footer>
+
+
+  <!-- ══════════════════════════════════════════════════════════════
+       JAVASCRIPT
+  ══════════════════════════════════════════════════════════════════
+
+  ╔════════════════════════════════════════════════════════════════╗
+  ║  ARCHITECTURE DES DONNÉES                                       ║
+  ║  Pour ajouter ou modifier une carte, édite uniquement         ║
+  ║  le tableau CARDS ci-dessous. Chaque objet représente         ║
+  ║  une carte. Les statuts possibles sont :                       ║
+  ║    "nouvelle"       → carte affichée au centre, face cachée   ║
+  ║    "déjà révélée"  → carte affichée dans la galerie           ║
+  ║    "à venir"        → carte ignorée pour l'instant            ║
+  ║                                                                ║
+  ║  UNE SEULE carte peut avoir le statut "nouvelle" à la fois.   ║
+  ╚════════════════════════════════════════════════════════════════╝
+  -->
+  <script>
+    /* ═══════════════════════════════════════════════════════
+       ①  BASE DE DONNÉES DES CARTES
+          ➜ C'est ici que tu ajoutes / modifies tes cartes.
+    ═══════════════════════════════════════════════════════ */
+    const CARDS = [
+      {
+        id: 1,
+        nom: "L'Étoile",
+        imageRecto: "images/carte-1.png",   // ← remplace par ton fichier
+        imageDos:   "images/dos-carte.png", // ← même dos pour toutes les cartes
+        significationEndroit: "Espoir, foi, renouveau. L'étoile annonce une période de sérénité après l'épreuve. Tes désirs les plus profonds commencent à prendre forme.",
+        significationEnvers:  "Désillusion passagère, doute. Rappelle-toi que même voilée, l'étoile brille toujours.",
+        messagePers: "Pour toi qui regardes toujours le ciel même quand il est couvert.",
+        statut: "nouvelle" // ← "nouvelle" | "déjà révélée" | "à venir"
+      },
+      {
+        id: 2,
+        nom: "La Lune",
+        imageRecto: "images/carte-2.png",
+        imageDos:   "images/dos-carte.png",
+        significationEndroit: "Intuition, mystère, profondeur de l'âme. Ce qui était caché commence à remonter à la surface.",
+        significationEnvers:  "Confusion, peurs non fondées. Fais confiance à ta lumière intérieure pour traverser l'obscurité.",
+        messagePers: "Ta façon d'habiter la nuit a toujours été une forme de magie.",
+        statut: "déjà révélée"
+      },
+      {
+        id: 3,
+        nom: "Le Soleil",
+        imageRecto: "images/carte-3.png",
+        imageDos:   "images/dos-carte.png",
+        significationEndroit: "Joie, succès, vitalité éclatante. Une nouvelle clarté illumine ton chemin.",
+        significationEnvers:  "Orgueil ou enthousiasme mal canalisé. La lumière est là — oriente-la avec douceur.",
+        messagePers: "Les jours où tu rayonnes sans t'en rendre compte sont mes préférés.",
+        statut: "déjà révélée"
+      },
+
+      /*
+       *  ── CARTE "À VENIR" — Exemple ──
+       *  Cette carte ne s'affiche nulle part pour l'instant.
+       *  Change son statut en "nouvelle" quand tu veux la révéler.
+       */
+      {
+        id: 4,
+        nom: "Le Monde",
+        imageRecto: "images/carte-4.png",
+        imageDos:   "images/dos-carte.png",
+        significationEndroit: "Accomplissement, cycle complet, plénitude.",
+        significationEnvers:  "Résistance au changement, cycle interrompu.",
+        messagePers: "Bientôt.",
+        statut: "à venir"
+      }
+
+      /*
+       *  ────────────────────────────────────────────────────────
+       *  POUR AJOUTER UNE NOUVELLE CARTE :
+       *  Copie le bloc ci-dessous, incrémente l'id,
+       *  remplis les champs, change le statut.
+       *  ────────────────────────────────────────────────────────
+       *  {
+       *    id: 5,
+       *    nom: "Nom de ta carte",
+       *    imageRecto: "images/carte-5.png",
+       *    imageDos:   "images/dos-carte.png",
+       *    significationEndroit: "...",
+       *    significationEnvers:  "...",
+       *    messagePers: "...",
+       *    statut: "à venir"
+       *  },
+       */
+    ];
+
+
+    /* ═══════════════════════════════════════════════════════
+       ②  UTILITAIRES
+    ═══════════════════════════════════════════════════════ */
+
+    /**
+     * Affiche un toast temporaire.
+     * @param {string} msg
+     * @param {number} [duration=2800] ms
+     */
+    function showToast(msg, duration = 2800) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    /**
+     * Joue un élément <audio> de manière sécurisée (gestion des erreurs navigateur).
+     * @param {string} id — id de l'élément <audio>
+     */
+    function playSound(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.currentTime = 0;
+      el.play().catch(() => {}); // silencieux si bloqué par le navigateur
+    }
+
+
+    /* ═══════════════════════════════════════════════════════
+       ③  TIRAGE ALÉATOIRE (PRÉPARÉ POUR LE FUTUR)
+          Cette fonction n'est pas appelée dans la version
+          actuelle, mais l'architecture est prête.
+    ═══════════════════════════════════════════════════════ */
+
+    /**
+     * Retourne un tableau de N cartes choisies aléatoirement
+     * parmi celles ayant un statut "déjà révélée" ou "nouvelle".
+     * @param {number} n — nombre de cartes à tirer
+     * @returns {Array} — tableau de n objets carte
+     *
+     * USAGE FUTUR :
+     *   const tirage = tirerCartes(3);
+     *   // afficher tirage[0], tirage[1], tirage[2]
+     */
+    function tirerCartes(n = 1) {
+      const pool = CARDS.filter(c => c.statut !== 'à venir');
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, Math.min(n, shuffled.length));
+    }
+
+
+    /* ═══════════════════════════════════════════════════════
+       ④  AUDIO — BOUTON ON/OFF
+    ═══════════════════════════════════════════════════════ */
+    const audioBtn   = document.getElementById('audio-btn');
+    const bgMusic    = document.getElementById('bg-music');
+    const audioLabel = document.getElementById('audio-label');
+    let   audioOn    = false;
+
+    audioBtn.addEventListener('click', () => {
+      if (audioOn) {
+        bgMusic.pause();
+        audioBtn.classList.remove('playing');
+        audioLabel.textContent = 'Activer la musique';
+        audioOn = false;
+      } else {
+        bgMusic.volume = 0.35;
+        bgMusic.play().then(() => {
+          audioBtn.classList.add('playing');
+          audioLabel.textContent = 'Couper la musique';
+          audioOn = true;
+        }).catch(() => {
+          showToast('Autorisez l\'audio dans votre navigateur.');
+        });
+      }
+    });
+
+
+    /* ═══════════════════════════════════════════════════════
+       ⑤  EFFET TILT 3D — CARTE CENTRALE
+    ═══════════════════════════════════════════════════════ */
+
+    /**
+     * Applique l'effet tilt + glare sur la carte centrale.
+     * @param {HTMLElement} scene   — .card-scene
+     * @param {HTMLElement} flipper — .card-flipper
+     * @param {HTMLElement} glare  — .card-glare (face dos)
+     */
+    function initTilt(scene, flipper, glare) {
+      const MAX_TILT = 14; // degrés max
+
+      scene.addEventListener('mousemove', (e) => {
+        if (flipper.classList.contains('flipped')) return; // pas de tilt après flip
+
+        const rect   = scene.getBoundingClientRect();
+        const cx     = rect.left + rect.width  / 2;
+        const cy     = rect.top  + rect.height / 2;
+        const dx     = (e.clientX - cx) / (rect.width  / 2); // -1 … 1
+        const dy     = (e.clientY - cy) / (rect.height / 2); // -1 … 1
+        const rotX   = -dy * MAX_TILT;
+        const rotY   =  dx * MAX_TILT;
+
+        flipper.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
+        // Glare suit la position de la souris
+        const gx = ((dx + 1) / 2) * 100;
+        const gy = ((dy + 1) / 2) * 100;
+        glare.style.background = `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.1) 0%, transparent 55%)`;
+      });
+
+      scene.addEventListener('mouseleave', () => {
+        if (flipper.classList.contains('flipped')) return;
+        flipper.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        glare.style.background  = 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.06) 0%, transparent 60%)';
+      });
+    }
+
+
+    /* ═══════════════════════════════════════════════════════
+       ⑥  RENDU — CARTE CENTRALE (NOUVELLE)
+    ═══════════════════════════════════════════════════════ */
+    function renderNewCard() {
+      const container = document.getElementById('new-card-container');
+      const infoZone  = document.getElementById('new-card-info');
+      const hint      = document.getElementById('card-hint');
+
+      // Trouver la carte "nouvelle"
+      const card = CARDS.find(c => c.statut === 'nouvelle');
+
+      if (!card) {
+        container.innerHTML = `
+          <p style="color:var(--text-faint);font-style:italic;padding:40px 0;">
+            Aucune nouvelle carte pour le moment.<br/>
+            Reviens bientôt…
+          </p>`;
+        hint.classList.add('hidden');
+        return;
+      }
+
+      // ── Créer la structure flip ──
+      container.innerHTML = `
+        <div class="card-scene" id="card-scene" role="button" aria-label="Retourner la carte ${card.nom}" tabindex="0">
+          <div class="card-flipper" id="card-flipper">
+
+            <!-- DOS -->
+            <div class="card-face card-back">
+              <img src="${card.imageDos}" alt="Dos de la carte" />
+              <div class="card-glare" id="card-glare"></div>
+            </div>
+
+            <!-- RECTO -->
+            <div class="card-face card-front">
+              <img src="${card.imageRecto}" alt="Recto — ${card.nom}" />
+            </div>
+
+          </div>
+        </div>`;
+
+      // ── Contenu révélé ──
+      infoZone.innerHTML = `
+        <h2>${card.nom}</h2>
+        <p class="card-personal-msg">"${card.messagePers}"</p>
+        <div class="meanings">
+          <div class="meaning-block">
+            <p class="meaning-label">☉ À l'endroit</p>
+            <p class="meaning-text">${card.significationEndroit}</p>
+          </div>
+          <div class="meaning-block">
+            <p class="meaning-label">☽ À l'envers</p>
+            <p class="meaning-text">${card.significationEnvers}</p>
+          </div>
+        </div>`;
+
+      // ── Tilt ──
+      const scene   = document.getElementById('card-scene');
+      const flipper = document.getElementById('card-flipper');
+      const glare   = document.getElementById('card-glare');
+      initTilt(scene, flipper, glare);
+
+      // ── Flip au clic / toucher / clavier ──
+      let flipped = false;
+      function doFlip() {
+        if (flipped) return;
+        flipped = true;
+
+        playSound('sfx-flip');
+        flipper.style.transform = ''; // reset tilt
+        flipper.classList.add('flipped');
+        hint.classList.add('hidden');
+        infoZone.classList.add('visible');
+        showToast(`✦ ${card.nom} révélée`);
+      }
+
+      scene.addEventListener('click', doFlip);
+      scene.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doFlip(); }
+      });
+    }
+
+
+    /* ═══════════════════════════════════════════════════════
+       ⑦  RENDU — GALERIE (DÉJÀ RÉVÉLÉES)
+    ═══════════════════════════════════════════════════════ */
+    function renderGallery() {
+      const grid = document.getElementById('gallery-grid');
+      const revealed = CARDS.filter(c => c.statut === 'déjà révélée');
+
+      if (revealed.length === 0) {
+        grid.innerHTML = `<p class="gallery-empty">Les cartes révélées apparaîtront ici au fil du temps…</p>`;
+        return;
+      }
+
+      revealed.forEach((card, index) => {
+        const item = document.createElement('article');
+        item.className = 'gallery-item';
+        item.style.animationDelay = `${index * 0.12}s`;
+
+        item.innerHTML = `
+          <img
+            class="gallery-card-img"
+            src="${card.imageRecto}"
+            alt="${card.nom}"
+            loading="lazy"
+            decoding="async"
+          />
+          <p class="gallery-card-name">${card.nom}</p>
+          <p class="gallery-card-msg">"${card.messagePers}"</p>
+          <div class="gallery-meanings">
+            <div class="gallery-meaning">
+              <strong>☉ À l'endroit</strong>
+              ${card.significationEndroit}
+            </div>
+            <div class="gallery-meaning">
+              <strong>☽ À l'envers</strong>
+              ${card.significationEnvers}
+            </div>
+          </div>`;
+
+        grid.appendChild(item);
+      });
+    }
+
+
+    /* ═══════════════════════════════════════════════════════
+       ⑧  INITIALISATION
+    ═══════════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderNewCard();
+      renderGallery();
+    });
+
+  </script>
+</body>
+</html>
